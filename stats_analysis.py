@@ -1,5 +1,6 @@
 import pandas as pd
 import statsmodels.formula.api as smf
+from statsmodels.formula.api import mixedlm
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -32,18 +33,22 @@ def main():
     # Analyze walking speed: Multiple regression
     print("### Walking Speed Analysis ###")
     data['education_level'] = data['education_level'].astype('category')
+    # Fit the OLS regression model
     regression_model = smf.ols("walking_speed ~ age + C(education_level)", data=data).fit()
     print(regression_model.summary())
 
-#     # Account for repeated measures (group by patient_id)
-#     print("\n### Repeated Measures Group Summary ###")
-#     grouped = data.groupby('patient_id')[['walking_speed', 'age']].mean()
-#     print(grouped.describe())
+    # Account for repeated measures
+    print("\n### Account for repeated measures ###")
+    # Fit the mixed-effects model
+    mixed_model = mixedlm("walking_speed ~ age + C(education_level)", data, groups=data["patient_id"]).fit()
+    print(mixed_model.summary()) 
 
-#     # Test for significant trends in walking speed
-#     print("\n### Significant Trends in Walking Speed ###")
-#     trend_test = smf.ols("walking_speed ~ visit_date", data=data).fit()
-#     print(trend_test.summary())
+
+    # Test for significant trends in walking speed
+    print("\n### Test for significant trends ###")
+    # Fit the OLS model with interaction terms
+    interaction_model = smf.ols("walking_speed ~ age * C(education_level)", data=data).fit(cov_type='cluster', cov_kwds={'groups': data['patient_id']})
+    print(interaction_model.summary())
 
 
     # Simple analysis of insurance type effect

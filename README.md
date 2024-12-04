@@ -6,20 +6,20 @@ I created a shell script named prepare.sh to handle the file creation and data c
 To achieve this, I did cd "$(dirname "$0")" to navigate to the correct directory. I ran the generate_dirty_data.py file to generate the dirty data. For cleaning, I first attempted to remove the ms_data.csv to ensure no duplication if the shell script is ran multiple times. I then used grep -v E '^\s*$|^\s*#' to remove the spaces before the # symbol, the lines that have # leading, and the empty lines. Used awk -F, to go line by line removing the extra commas. Then I created a lst file to store the insurance_types. 
 
 Below is a the summary of my first part:
+
 ------Summary of the Processed Data:------
+
 there are 15449 visits/rows in the data(not including the headers)
 
-------First 10 Visits:------
-P0001,2020-01-07,74.65,Graduate,3.74
-P0001,2020-04-09,74.9,Graduate,3.59
-P0001,2020-10-02,75.39,Graduate,4.58
-P0001,2021-01-05,75.65,Graduate,3.68
-P0001,2021-03-28,75.87,Graduate,3.66
-P0001,2021-06-21,76.1,Graduate,3.45
-P0001,2021-09-11,76.33,Graduate,3.51
-P0001,2021-11-26,76.54,Graduate,4.15
-P0001,2022-02-14,76.76,Graduate,3.3
-P0001,2022-05-24,77.03,Graduate,3.81
+------First 5 Visits:------
+
+| patient_id | visit_date | age | education_level | walking_speed |
+|-------------|-----------|----------------|---------------|---------------|
+| [P0001]| [2020-01-07] | [74.65]   | [Graduate]   | [3.74]   |
+| [P0001]| [2020-04-09] | [74.9]   | [Graduate]   | [3.59]   |
+| [P0001]| [2020-10-02] | [75.39]   | [Graduate]   | [4.58]   |
+| [P0001]| [2021-01-05] | [75.65]   | [Graduate]   |  [3.68]   |
+| [P0001]| [2021-03-28] | [75.87]  | [Graduate] | [3.66]   |
 
 
 ## Question 2: Data Analysis with Python
@@ -33,22 +33,26 @@ To assign insurance information, I opened the insurance.lst file I created earli
 
 ### 3.Calculate summary statistics
 The mean speed by education is:
-|  |education_level   |   walking_speed|
-|0 |     Bachelors    |   4.037275     |
-|1 |      Graduate    |   4.415513     |
-|2 |   High School    |   3.267616     |
-|3 |  Some College    |   3.676484     |
+| education_level | walking_speed |
+|-------------|-----------|
+| [Bachelors]| [4.037275] |
+| [Graduate]| [4.415513] |
+| [High School]| [3.267616] |
+| [Some College]| [3.676484] |
+
 
 The mean costs by differnet insurances:
-|  |insurance_type   |   visit_cost      |
-|0 |     Basic       |   1000.789775     |
-|1 |Deluxe_Premium   |   300.204955      |
-|2 |   Platimum      |   499.405811      |
-|3 |  Premium        |   699.285678      |
-|4 |  Ultimate       |   99.955152       |
+| insurance_type | visit_cost |
+|-------------|-----------|
+| [Basic]| [1000.789775] |
+| [Premium]| [699.285678] |
+| [Platinum]| [499.405811] |
+| [Deluxe_Premium]| [300.204955] |
+| [Ultimate]| [99.955152] |
 
-Age Effects on Walking Speed:
-correlation is -0.68
+
+Age Effects on Walking Speed: correlation is -0.68
+
 Age increases, walking speed decreases.
 
 ## Question 3: Statistical Analysis
@@ -58,7 +62,7 @@ First, we removed the outliers for `walking_speed` and `visit_cost`. We identifi
 
 Next, we applied a multiple regression model with `education` and `age` as predictors. The resulting regression equation for `walking_speed` is:
 
-'`walking_speed` = 5.6153 + 0.4015 * `graduate` - 0.7999 * `high_school` - 0.4026 * `some_college` - 0.0303 * `age`'
+`walking_speed` = 5.6153 + 0.4015 * `graduate` - 0.7999 * `high_school` - 0.4026 * `some_college` - 0.0303 * `age`
 
 | variable | coefficient | p-value | [0.025 0.975] |
 |-------------|-----------|----------------|---------------|
@@ -68,7 +72,7 @@ Next, we applied a multiple regression model with `education` and `age` as predi
 | [Some College]| [-0.4026] | [0.000]   | [-0.417, -0.388]   | 
 | [age]| [-0.0303] | [0.000]  | [-0.031, -0.030] |
 
-All predictors have p-values < 0.001, indicating they are highly significant contributors to the model. The model explains a substantial proportion of variance in walking speed (R² = 79.9%), making it a strong predictor.
+All predictors have p-values < 0.001, indicating they are highly significant contributors to the model. The model explains a substantial proportion of variance in walking speed (R² = 79.9%), making it a strong predictor. A mixed-effects model was fitted using walking_speed as the dependent variable, with age and education_level as fixed effects. A random intercept was added for each patient_id to account for repeated measurements from the same individuals. An OLS regression was performed with interaction terms (age * education_level) to test whether the effect of age on walking speed varies by education level.
 
 ### 2.Analyze costs
 ####
@@ -87,19 +91,24 @@ The mean and standard deviation of visit costs were calculated for each insuranc
 | [Ultimate]| [100.114571] | [28.993129]  |
 
 Here is the boxplot which shows distinct separation between the groups, further confirming the ANOVA results.
+
 ![Boxplot](Boxplot_c.png)
 
 For the effect sizes, we use pairwise comparisons between insurance types were performed to calculate effect sizes, revealing substantial differences:
+
 Basic vs Premium: 𝑑 = 10.36
+
 Basic vs Deluxe_Premium: d=24.29
+
 Basic vs Ultimate: d=30.99
+
 Premium vs Deluxe_Premium: d=13.94
+
 Deluxe_Premium vs Ultimate: d=6.90
 
 ### 3.Advanced analysis
 #### Interaction
-The age, graduate, high school, some college are statistically significant(p-value = 0.000)
-None of the interaction terms between age and education_level are statistically significant. This suggests that the relationship between age and walking speed does not vary significantly by education level. No evidence of interaction effects between age and education_level was found.
+The age, graduate, high school, some college are statistically significant(p-value = 0.000). None of the interaction terms between age and education_level are statistically significant. This suggests that the relationship between age and walking speed does not vary significantly by education level. No evidence of interaction effects between age and education_level was found.
 
 | variable | coefficient | p-value | [0.025 0.975] |
 |-------------|-----------|----------------|---------------|
@@ -120,32 +129,40 @@ This indicates that insurance type does not have a meaningful direct effect on w
 ### 1.Walking speed analysis
 ####
 ![scatterplot](scatterplot.png)
+
 This plot shows the negative slope of the regression line indicates a decline in walking speed with age.
 
 ![Boxplot](Boxplot.png)
+
 This plot shows that individuals with higher education levels tend to have higher walking speeds, while those with lower education levels have lower walking speeds.
 
 ![Lineplot](Lineplot.png)
+
 This plot shows walking speed decreases with age across all education levels. Graduates consistently exhibit the highest walking speed across all ages. The lines are approximately parallel, indicating no significant interaction between education level and age.
 
 
 ### 2.Cost analysis
 ####
 ![Barplot](Barplot2.png)
+
 The bar plot shows the mean visit costs for each insurance type.
 
 ![Boxplot](Boxplot2.png)
+
 The box plot illustrates the distribution of visit costs for each insurance type.
 
 ### 3.Combined visualizations
 ####
 ![pairplot](pairplot.png)
 
+The pair plot visualizes the relationships between age, walking_speed, and visit_cost, with color encoding for education_level. Education level influences the distributions of walking speed, with graduates showing higher speeds and narrower distributions, while high school individuals exhibit lower speeds and broader variability.
+
 ![scatterplot](scatterplot3.png)
+This plot shows faceted scatter plots of walking_speed vs age across different insurance types and education levels. Walking speed trends are relatively consistent across insurance types, suggesting that education has a stronger effect on walking speed than insurance.
 
 
 ![lineplot](lineplot3.png)
-
+This line plot visualizes the trends in walking_speed over time for different insurance types.
 
 
 
